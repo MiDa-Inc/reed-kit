@@ -1,0 +1,21 @@
+name: Build
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+jobs:
+  build:
+    name: xcodebuild
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build (iOS)
+        run: xcodebuild build -scheme ReedKit -destination 'generic/platform=iOS Simulator'
+  lint:
+    name: swiftlint
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - run: brew install swiftlint
+      - run: swiftlint lint --strict --reporter github-actions-logging

@@ -1,0 +1,15 @@
+excluded:
+  - .build
+  - DerivedData
+disabled_rules:
+  - force_unwrapping
+  - line_length
+  - trailing_comma
+opt_in_rules:
+  - closure_spacing
+  - empty_count
+identifier_name:
+  min_length:
+    warning: 2
+    error: 1
+  excluded: [i, v, id, le]
