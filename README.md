@@ -1,12 +1,11 @@
 # ReedKit
 
-A small iOS Swift package for **tap‑and‑hold to speak** dictation — the engine
-extracted from the [Reed](https://github.com/MiDa-Inc/reed-mobile) app so any app
-can drop it in. Same pipeline, same providers:
+A small iOS Swift package that adds **tap‑and‑hold to speak** dictation to any
+app: hold a button, speak, release — clean text appears. The pipeline:
 
-**hold mic → `AVAudioEngine` (16 kHz WAV) → Groq Whisper → optional Claude cleanup → text.**
+**hold mic → `AVAudioEngine` (16 kHz mono WAV) → Groq Whisper → optional Claude cleanup → text.**
 
-Standalone package — no dependency on the Reed apps.
+No third‑party package dependencies — it calls Groq and Anthropic directly over HTTPS.
 
 ## Install (Swift Package Manager)
 
@@ -28,7 +27,7 @@ import ReedKit
 
 struct DictateView: View {
     @StateObject private var engine = DictationEngine(
-        config: .init(groqKey: "gsk_…", anthropicKey: "sk-ant-…")   // anthropic optional
+        config: .init(groqKey: "gsk_…", anthropicKey: "sk-…")   // anthropic optional
     )
     @State private var text = ""
 
