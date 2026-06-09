@@ -41,14 +41,16 @@ public final class DictationEngine: ObservableObject {
     }
 
     /// Begin recording. Pair with `stop()`. (Hold-to-talk: call on press / release.)
-    public func start() async {
+    /// - Parameter autoStopOnSilence: overrides `config.autoStopOnSilence` for this
+    ///   take — e.g. `false` for hold-to-talk, `true` for a hands-free "tap to start".
+    public func start(autoStopOnSilence: Bool? = nil) async {
         switch state {
         case .recording, .transcribing: return
         case .idle, .done, .error: break
         }
         transcript = ""
         do {
-            try await recorder.start(autoStop: config.autoStopOnSilence)
+            try await recorder.start(autoStop: autoStopOnSilence ?? config.autoStopOnSilence)
             state = .recording
         } catch {
             state = .error(error.localizedDescription)
