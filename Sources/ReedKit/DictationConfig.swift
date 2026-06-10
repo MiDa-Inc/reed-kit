@@ -18,6 +18,11 @@ public struct DictationConfig {
     /// Recordings whose average level is below this (dBFS) are treated as silence
     /// and skipped — avoids Whisper hallucinating "Thank you." on an empty take.
     public var silenceFloorDB: Double
+    /// ISO 639-1 language code ("en", "hy", "ru"); nil = Whisper auto-detect.
+    /// Declaring a language also routes the per-language Whisper model and the
+    /// language-aware cleanup prompt (e.g. "hy" uses whisper-large-v3, which
+    /// takes precedence over `groqModel`).
+    public var language: String?
 
     public init(
         groqKey: String,
@@ -26,7 +31,8 @@ public struct DictationConfig {
         cleanupModel: String = "claude-haiku-4-5-20251001",
         enableCleanup: Bool = true,
         autoStopOnSilence: Bool = false,
-        silenceFloorDB: Double = -45
+        silenceFloorDB: Double = -45,
+        language: String? = nil
     ) {
         self.groqKey = groqKey
         self.anthropicKey = anthropicKey
@@ -35,6 +41,7 @@ public struct DictationConfig {
         self.enableCleanup = enableCleanup
         self.autoStopOnSilence = autoStopOnSilence
         self.silenceFloorDB = silenceFloorDB
+        self.language = language
     }
 }
 

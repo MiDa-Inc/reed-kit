@@ -29,10 +29,12 @@ public final class DictationEngine: ObservableObject {
 
     public init(config: DictationConfig) {
         self.config = config
-        self.groq = GroqClient(apiKey: config.groqKey, model: config.groqModel)
+        let model = config.language.flatMap { LanguageSupport.modelByLanguage[$0] } ?? config.groqModel
+        self.groq = GroqClient(apiKey: config.groqKey, model: model, language: config.language)
         self.cleanup = CleanupClient(
             apiKey: config.enableCleanup ? config.anthropicKey : nil,
-            model: config.cleanupModel
+            model: config.cleanupModel,
+            language: config.language
         )
         recorder.silenceFloorDB = config.silenceFloorDB
         recorder.onAutoStop = { [weak self] in
