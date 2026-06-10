@@ -5,18 +5,11 @@ import Foundation
 struct CleanupClient {
     let apiKey: String?
     let model: String
+    /// ISO 639-1 code, or nil — selects the language-aware cleanup prompt.
+    let language: String?
     private let endpoint = URL(string: "https://api.anthropic.com/v1/messages")!
 
-    private let systemPrompt = """
-    You are a transcription cleaner. The input is raw speech-to-text from a dictation session.
-    Return only the cleaned written version of the same content:
-    - remove filler words (um, uh, like, you know)
-    - resolve self-corrections ("Tuesday wait Wednesday" -> "Wednesday")
-    - add appropriate punctuation and casing
-    - preserve technical terms, code identifiers, and proper nouns exactly
-    - keep the user's voice, meaning, and length unchanged
-    Return only the cleaned text. No preamble, no explanation, no surrounding quotes.
-    """
+    private var systemPrompt: String { LanguageSupport.cleanupPrompt(language: language) }
 
     func polish(transcript: String) async throws -> String {
         guard let apiKey, !apiKey.isEmpty else { return transcript }

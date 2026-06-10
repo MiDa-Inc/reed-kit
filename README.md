@@ -63,7 +63,10 @@ nothing. (Keep them out of source; load from your own secure store.)
 
 ## Public API
 
-- `DictationConfig` — keys, models, `enableCleanup`, `autoStopOnSilence`, `silenceFloorDB`.
+- `DictationConfig` — keys, models, `enableCleanup`, `autoStopOnSilence`, `silenceFloorDB`,
+  and `language` (ISO 639-1 — `"en"`/`"hy"`/`"ru"`; nil = auto-detect). Declaring a language
+  routes the per-language Whisper model (hy → `whisper-large-v3`), a native disfluency
+  prompt, and a language-aware cleanup prompt that never translates.
 - `DictationEngine` (`@MainActor`, `ObservableObject`) — `state`, `transcript`, `onResult`, `start()`, `stop()`.
 - `DictationState` — `idle · recording · transcribing · done · error`.
 - `HoldToTalkButton` — the bundled hold-to-talk mic (themeable `tint`).

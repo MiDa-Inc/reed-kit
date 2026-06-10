@@ -5,6 +5,8 @@ import Foundation
 struct GroqClient {
     let apiKey: String
     let model: String
+    /// ISO 639-1 code, or nil for auto-detect.
+    let language: String?
     private let endpoint = URL(string: "https://api.groq.com/openai/v1/audio/transcriptions")!
 
     func transcribe(wav: Data) async throws -> String {
@@ -40,9 +42,15 @@ struct GroqClient {
         field("model", model)
         field("response_format", "json")
         field("temperature", "0")
-        // Disfluency bias — discourages over-cleanup. NOT instructions (Whisper
-        // leaks instruction text into the output).
-        field("prompt", "Um, ah, like, you know, so.")
+        if let language {
+            field("language", language)
+        }
+        // Per-language disfluency bias — discourages over-cleanup. NOT
+        // instructions (Whisper leaks instruction text into the output).
+        // Auto-detect sends no prompt: an English prompt biases detection.
+        if let language, let prompt = LanguageSupport.promptByLanguage[language] {
+            field("prompt", prompt)
+        }
         body.append(Data("--\(boundary)\r\n".utf8))
         body.append(Data("Content-Disposition: form-data; name=\"file\"; filename=\"audio.wav\"\r\n".utf8))
         body.append(Data("Content-Type: audio/wav\r\n\r\n".utf8))
