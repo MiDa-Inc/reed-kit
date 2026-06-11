@@ -32,7 +32,9 @@ struct GroqClient {
         return resp.text.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
-    private func body(boundary: String, wav: Data) -> Data {
+    // Internal (not private) so tests can pin the request shape — it mirrors
+    // reed-backend's adapter, the source of truth for cross-client parity.
+    func body(boundary: String, wav: Data) -> Data {
         var body = Data()
         func field(_ name: String, _ value: String) {
             body.append(Data("--\(boundary)\r\n".utf8))
