@@ -7,7 +7,7 @@ import XCTest
 final class GroqRequestShapeTests: XCTestCase {
     private func bodyString(language: String?, model: String) -> String {
         let client = GroqClient(apiKey: "k", model: model, language: language)
-        return String(decoding: client.body(boundary: "B", wav: Data([0x01])), as: UTF8.self)
+        return String(bytes: client.body(boundary: "B", wav: Data([0x01])), encoding: .utf8) ?? ""
     }
 
     private func field(_ name: String, _ value: String) -> String {
