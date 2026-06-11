@@ -23,19 +23,30 @@ public final class DictationEngine: ObservableObject {
     public var onResult: ((String) -> Void)?
 
     private let config: DictationConfig
-    private let recorder = AudioRecorder()
-    private let groq: GroqClient
-    private let cleanup: CleanupClient
+    private let recorder: Recording
+    private let groq: Transcribing
+    private let cleanup: Polishing
 
-    public init(config: DictationConfig) {
-        self.config = config
+    public convenience init(config: DictationConfig) {
         let model = config.language.flatMap { LanguageSupport.modelByLanguage[$0] } ?? config.groqModel
-        self.groq = GroqClient(apiKey: config.groqKey, model: model, language: config.language)
-        self.cleanup = CleanupClient(
-            apiKey: config.enableCleanup ? config.anthropicKey : nil,
-            model: config.cleanupModel,
-            language: config.language
+        self.init(
+            config: config,
+            recorder: AudioRecorder(),
+            groq: GroqClient(apiKey: config.groqKey, model: model, language: config.language),
+            cleanup: CleanupClient(
+                apiKey: config.enableCleanup ? config.anthropicKey : nil,
+                model: config.cleanupModel,
+                language: config.language
+            )
         )
+    }
+
+    /// Injection seam for tests; production goes through `init(config:)`.
+    init(config: DictationConfig, recorder: Recording, groq: Transcribing, cleanup: Polishing) {
+        self.config = config
+        self.recorder = recorder
+        self.groq = groq
+        self.cleanup = cleanup
         recorder.silenceFloorDB = config.silenceFloorDB
         recorder.onAutoStop = { [weak self] in
             Task { @MainActor in await self?.stop() }
