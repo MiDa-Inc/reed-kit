@@ -21,3 +21,8 @@ protocol Polishing {
 extension AudioRecorder: Recording {}
 extension GroqClient: Transcribing {}
 extension CleanupClient: Polishing {}
+
+/// Backend mode: cleanup already happened server-side.
+struct NoopPolisher: Polishing {
+    func polish(transcript: String) async throws -> String { transcript }
+}
