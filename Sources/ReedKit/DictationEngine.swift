@@ -28,17 +28,28 @@ public final class DictationEngine: ObservableObject {
     private let cleanup: Polishing
 
     public convenience init(config: DictationConfig) {
-        let model = config.language.flatMap { LanguageSupport.modelByLanguage[$0] } ?? config.groqModel
-        self.init(
-            config: config,
-            recorder: AudioRecorder(),
-            groq: GroqClient(apiKey: config.groqKey, model: model, language: config.language),
-            cleanup: CleanupClient(
+        let transcriber: Transcribing
+        let polisher: Polishing
+        if let endpoint = config.backendEndpoint {
+            // Backend mode: the server owns the keys, the spec, and cleanup.
+            transcriber = BackendClient(
+                endpoint: endpoint,
+                tokenProvider: config.backendTokenProvider ?? { nil },
+                language: config.language
+            )
+            polisher = NoopPolisher()
+        } else {
+            let model = config.language.flatMap { LanguageSupport.modelByLanguage[$0] }
+                ?? config.groqModel
+            transcriber = GroqClient(apiKey: config.groqKey, model: model,
+                                     language: config.language)
+            polisher = CleanupClient(
                 apiKey: config.enableCleanup ? config.anthropicKey : nil,
                 model: config.cleanupModel,
                 language: config.language
             )
-        )
+        }
+        self.init(config: config, recorder: AudioRecorder(), groq: transcriber, cleanup: polisher)
     }
 
     /// Injection seam for tests; production goes through `init(config:)`.

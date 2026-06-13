@@ -67,6 +67,10 @@ nothing. (Keep them out of source; load from your own secure store.)
   and `language` (ISO 639-1 — `"en"`/`"hy"`/`"ru"`; nil = auto-detect). Declaring a language
   routes the per-language Whisper model (hy → `whisper-large-v3`), a native disfluency
   prompt, and a language-aware cleanup prompt that never translates.
+- **Backend mode (0.3.0):** set `backendEndpoint` (a reed-backend `/api/transcribe`) +
+  `backendTokenProvider` (a fresh account bearer token per take) and the recording is
+  POSTed to the server instead — **no provider keys on the device**; model routing and
+  cleanup happen server-side, where the spec lives.
 - `DictationEngine` (`@MainActor`, `ObservableObject`) — `state`, `transcript`, `onResult`, `start()`, `stop()`.
 - `DictationState` — `idle · recording · transcribing · done · error`.
 - `HoldToTalkButton` — the bundled hold-to-talk mic (themeable `tint`).

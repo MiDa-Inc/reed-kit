@@ -35,3 +35,49 @@ final class GroqRequestShapeTests: XCTestCase {
         XCTAssertTrue(body.contains(field("response_format", "json")))
     }
 }
+
+/// Backend-mode request shape — mirrors what reed-backend expects.
+final class BackendRequestShapeTests: XCTestCase {
+    private func bodyString(language: String?) -> String {
+        let client = BackendClient(
+            endpoint: URL(string: "https://reed.example/api/transcribe")!,
+            tokenProvider: { "jwt" },
+            language: language
+        )
+        return String(bytes: client.body(boundary: "B", wav: Data([0x01])), encoding: .utf8) ?? ""
+    }
+
+    private func field(_ name: String, _ value: String) -> String {
+        "Content-Disposition: form-data; name=\"\(name)\"\r\n\r\n\(value)\r\n"
+    }
+
+    func testBackendBodyCarriesCleanupAndLanguage() {
+        let body = bodyString(language: "hy")
+        XCTAssertTrue(body.contains(field("cleanup", "true")))   // server-side cleanup
+        XCTAssertTrue(body.contains(field("language", "hy")))
+        XCTAssertFalse(body.contains("name=\"model\""))          // the backend picks models
+        XCTAssertFalse(body.contains("name=\"prompt\""))         // and prompts
+    }
+
+    func testBackendBodyOmitsLanguageForAuto() {
+        let body = bodyString(language: nil)
+        XCTAssertFalse(body.contains("name=\"language\""))
+    }
+}
+
+@MainActor
+final class BackendModeEngineTests: XCTestCase {
+    func testBackendModeWithoutTokenSurfacesSignedOutError() async {
+        let client = BackendClient(
+            endpoint: URL(string: "https://reed.example/api/transcribe")!,
+            tokenProvider: { nil },
+            language: nil
+        )
+        do {
+            _ = try await client.transcribe(wav: Data(count: 64_000))
+            XCTFail("expected an error")
+        } catch {
+            XCTAssertTrue("\(error.localizedDescription)".contains("Not signed in"))
+        }
+    }
+}
