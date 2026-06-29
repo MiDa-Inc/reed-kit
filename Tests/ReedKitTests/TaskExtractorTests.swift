@@ -100,8 +100,8 @@ final class TaskExtractorTests: XCTestCase {
 private final class StubProtocol: URLProtocol, @unchecked Sendable {
     nonisolated(unsafe) static var next: (Data, Int)?
 
-    override class func canInit(with request: URLRequest) -> Bool { true }
-    override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
+    override static func canInit(with request: URLRequest) -> Bool { true }
+    override static func canonicalRequest(for request: URLRequest) -> URLRequest { request }
     override func startLoading() {
         guard let (data, status) = StubProtocol.next else {
             client?.urlProtocol(self, didFailWithError: URLError(.unknown))
