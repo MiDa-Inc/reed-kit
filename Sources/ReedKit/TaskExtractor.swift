@@ -67,21 +67,47 @@ public struct TaskExtractor: Sendable {
             throw ExtractionError.http("No HTTP response")
         }
         guard (200..<300).contains(http.statusCode) else {
-            throw ExtractionError.http(
-                "HTTP \(http.statusCode): \(String(data: data, encoding: .utf8) ?? "")"
-            )
+            // Body is bounded: a malicious or misconfigured backend echoing
+            // the bearer token or PII in an error payload shouldn't poison
+            // host crash reports / log aggregators. 200 chars is enough to
+            // see "invalid api key" / "rate limit" / "validation error".
+            let body = String(data: data, encoding: .utf8).map { String($0.prefix(200)) } ?? ""
+            throw ExtractionError.http("HTTP \(http.statusCode): \(body)")
         }
         struct Resp: Decodable { let task: TaskExtraction? }
-        return try JSONDecoder().decode(Resp.self, from: data).task
+        let decoder = JSONDecoder()
+        // Match snake_case server fields automatically. TaskExtraction.dueDate
+        // still needs an explicit CodingKey (or this strategy) — chose the
+        // strategy because it covers any future field the backend adds
+        // without requiring a kit release.
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        return try decoder.decode(Resp.self, from: data).task
     }
 
     /// Build the JSON body. Internal (not private) so tests can pin the
     /// wire shape the way the backend's tests do for its half.
     func body(transcript: String) throws -> Data {
-        var payload: [String: Any] = ["transcript": transcript]
+        var payload: [String: Any] = [
+            "transcript": transcript,
+            // Send the client's local wall-clock date so the backend can
+            // resolve relative dates ("next Friday") against it instead of
+            // UTC. The backend treats this field as optional + back-compat.
+            "client_today": Self.todayFormatter.string(from: Date()),
+        ]
         if let language { payload["language"] = language }
         return try JSONSerialization.data(withJSONObject: payload, options: [.sortedKeys])
     }
+
+    /// Local-time `yyyy-MM-dd` formatter for `client_today`. POSIX locale +
+    /// the current `TimeZone` so the date the model resolves against is the
+    /// user's perceived "today", not UTC.
+    private static let todayFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = TimeZone.current
+        formatter.dateFormat = "yyyy-MM-dd"
+        return formatter
+    }()
 
     public enum ExtractionError: LocalizedError {
         case notSignedIn

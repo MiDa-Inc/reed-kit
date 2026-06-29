@@ -28,15 +28,12 @@ public struct TaskExtraction: Codable, Equatable, Sendable {
         case high
     }
 
-    enum CodingKeys: String, CodingKey {
-        case title
-        case description
-        case dueDate = "due_date"
-        case priority
-        case assignees
-        case subtasks
-        case tags
-    }
+    // No explicit CodingKeys: TaskExtractor sets
+    // JSONDecoder.keyDecodingStrategy = .convertFromSnakeCase, which maps
+    // `due_date` → `dueDate` automatically and handles any future server
+    // field without a kit release. Adding a CodingKey here would *override*
+    // the strategy (strategy transforms incoming keys first, then matches
+    // against CodingKey raw values) and silently break the field.
 
     public init(
         title: String? = nil,
