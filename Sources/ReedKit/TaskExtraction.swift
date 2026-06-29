@@ -12,15 +12,15 @@ import Foundation
 /// nil when the user didn't address them — never invented to fill the
 /// slot.
 public struct TaskExtraction: Codable, Equatable, Sendable {
-    public var title: String?
-    public var description: String?
+    public let title: String?
+    public let description: String?
     /// ISO-8601 date (YYYY-MM-DD). String rather than `Date` so partial
     /// or model-resolved values round-trip without timezone surprises.
-    public var dueDate: String?
-    public var priority: Priority?
-    public var assignees: [String]?
-    public var subtasks: [String]?
-    public var tags: [String]?
+    public let dueDate: String?
+    public let priority: Priority?
+    public let assignees: [String]?
+    public let subtasks: [String]?
+    public let tags: [String]?
 
     public enum Priority: String, Codable, Equatable, Sendable, CaseIterable {
         case low

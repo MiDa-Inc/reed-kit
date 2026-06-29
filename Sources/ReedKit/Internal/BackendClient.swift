@@ -4,11 +4,12 @@ import Foundation
 /// calling Groq/Claude with on-device keys, POST the recorded WAV to a
 /// reed-backend `/api/transcribe`, authenticated by the host's account token.
 /// The backend owns the provider keys and the cleanup spec.
-struct BackendClient: Transcribing {
+struct BackendClient: Transcribing, Sendable {
     let endpoint: URL
     /// Fresh bearer token per request — hosts hand a provider so a session
-    /// can refresh between takes.
-    let tokenProvider: () async -> String?
+    /// can refresh between takes. `@Sendable` so strict-concurrency hosts
+    /// don't trip; mirrors `TaskExtractor.tokenProvider`.
+    let tokenProvider: @Sendable () async -> String?
     let language: String?
 
     func transcribe(wav: Data) async throws -> String {
